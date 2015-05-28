@@ -1,5 +1,35 @@
 <?php
 /**
+ * Split a nice url into parts.
+ *
+ * @param $key
+ *   Integer used to indicate the position in the url.
+ *
+ * @return string | bool | array
+ *   If a key is passed to this function, a string is returned if it exists, otherwise FALSE. 
+ *   If no key is passed, a full array will be returned.
+ */
+function arg($key = NULL) {
+	global $config;
+
+	$uri = str_replace($config['root'], '', $_SERVER['REQUEST_URI']);
+	$split = explode('/', $uri);
+
+	foreach ($split as $k => $v) {
+		$split[ $k ] = htmlspecialchars($v, ENT_QUOTES);
+	}
+
+	if (!is_null($key)) {
+		if (!empty($split[ $key ])) {
+			return $split[ $key ];
+		}
+		return FALSE;
+	}
+
+	return $split;
+}
+
+/**
  * Safe alternative for $_GET.
  * All keys and values are parsed through htmlspecialchars.
  *
@@ -181,4 +211,80 @@ function get_messages($type = 'all') {
 	}
 
 	return $output;
+}
+
+function load_template($file = '', $regions = array()) {
+	global $config;
+
+	$output = '';
+
+	if (empty($file)) {
+		add_log('template', 'No file found.');
+		return FALSE;
+	}
+
+	$path = $config['template_dir'] . '/' . $file . '.tpl.php';
+	if (!file_exists($path)) {
+		add_log('template', $path . ' not found.');
+		return FALSE;
+	}
+
+	ob_start();
+	include($path);
+	$output = ob_get_contents();
+	ob_end_clean();
+
+	return $output;
+}
+
+function load_javascript($page = '') {
+	global $config;
+
+	$js = array();
+
+	if (!empty($config['js']['all'])) {
+		foreach ($config['js']['all'] as $script) {
+			$file_path = $config['js_dir'] . '/' . $script . '.js';
+			if (file_exists($file_path)) {
+				$js[] = '<script src="' . $file_path . '"></script>';
+			}
+		}
+	}
+
+	if (!empty($config['js'][ $page ])) {
+		foreach ($config['js'][ $page ] as $script) {
+			$file_path = $config['js_dir'] . '/' . $script . '.js';
+			if (file_exists($file_path)) {
+				$js[] = '<script src="' . $file_path . '"></script>';
+			}
+		}
+	}
+
+	return implode("\n", $js);
+}
+
+function get_sounds() {
+	global $config;
+
+	$return = array();
+
+	// Connect to the database.
+	$db = new medoo($config['database']);
+
+	// Insert the new log.
+	$results = $db->select(
+		$config['table_prefix'] . 'files',
+		'*',
+		array(
+			'ORDER' => 'name ASC',
+		)
+	);
+
+	if (!empty($results)) {
+		foreach ($results as $result) {
+			print_r($result);
+		}
+	}
+
+	return $return;
 }
