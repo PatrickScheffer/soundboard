@@ -263,6 +263,32 @@ function load_javascript($page = '') {
 	return implode("\n", $js);
 }
 
+function load_stylesheets($page = '') {
+	global $config;
+
+	$css = array();
+
+	if (!empty($config['css']['all'])) {
+		foreach ($config['css']['all'] as $style) {
+			$file_path = $config['css_dir'] . '/' . $style . '.css';
+			if (file_exists($file_path)) {
+				$css[] = '<link rel="stylesheet" type="text/css" href="' . $file_path . '" />';
+			}
+		}
+	}
+
+	if (!empty($config['css'][ $page ])) {
+		foreach ($config['css'][ $page ] as $style) {
+			$file_path = $config['css_dir'] . '/' . $style . '.css';
+			if (file_exists($file_path)) {
+				$css[] = '<link rel="stylesheet" type="text/css" href="' . $file_path . '" />';
+			}
+		}
+	}
+
+	return implode("\n", $css);
+}
+
 function get_sounds() {
 	global $config;
 
@@ -282,7 +308,16 @@ function get_sounds() {
 
 	if (!empty($results)) {
 		foreach ($results as $result) {
-			print_r($result);
+			if (empty($result['path']) || !file_exists($result['path'])) {
+				continue;
+			}
+
+			$name = $result['path'];
+			if (!empty($result['name'])) {
+				$name = $result['name'];
+			}
+
+			$return[] = '<div class="ui360"><a href="' . $result['path'] . '">' . $name . '</a></div>';
 		}
 	}
 

@@ -10,6 +10,7 @@ $complete_upload_form = '
 		<label for="file_name">Filename:</label>
 		<input type="text" id="file_name" name="file_name" />
 		<input type="submit" value="Submit" />
+		<a href="controller.php?cancel">Cancel and delete file</a>
 		<div class="form_error"></div>
 	</form>
 	<script>
@@ -37,6 +38,11 @@ if (!empty($_FILES)) {
 	}
 } elseif (!empty($post_data['file_name'])) {
 	update_file_name($post_data['file_name']);
+} elseif (isset($_GET['cancel']) && !empty($_SESSION['file_id'])) {
+	if (delete_file($_SESSION['file_id'])) {
+		unset($_SESSION['file_id']);
+	}
+	header('Location: ' . $config['root'] . 'recorder');
 } else {
 	header('Location: ' . $config['root']);
 }
@@ -158,4 +164,46 @@ function update_file_name($filename = '') {
 	set_message('Successfully added a name to your audio file.');
 
 	header('Location: ' . $config['root']);
+}
+
+function delete_file($file_id = 0) {
+	global $config;
+
+	// Stop if we have no file id.
+	if (empty($file_id)) {
+		return FALSE;
+	}
+
+	// Connect to the database.
+	$db = new medoo($config['database']);
+
+	// Load the file path.
+	$result = $db->select($config['table_prefix'] . 'files', array(
+		'path',
+	), array(
+		'id' => htmlspecialchars($file_id, ENT_QUOTES),
+	));
+
+	// Check if we have a file path.
+	if (!empty($result[0]['path'])) {
+		// Check if the path existss.
+		if (file_exists($result[0]['path'])) {
+			// Remove the file.
+			if (!unlink($result[0]['path'])) {
+				set_message('Failed deleting your file. Please try again.', 'error');
+				return FALSE;
+			}
+		}
+
+		// Also remove the file from the database.
+		$rows_deleted = $db->delete($config['table_prefix'] . 'files', array(
+			'id' => htmlspecialchars($file_id, ENT_QUOTES),
+		));
+
+		if (!empty($rows_deleted)) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }

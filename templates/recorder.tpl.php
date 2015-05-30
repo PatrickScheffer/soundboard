@@ -1,11 +1,11 @@
-
-
 	<div id="complete_upload_popup" class="well">
     <div class="upload_progress"></div>
     <div class="upload_complete_content"></div>
   </div>
 
 	<?php print get_messages();?>
+
+	<a href="<?php print $config['root'];?>">Dashboard</a>
 
 	<div id="viz">
 		<canvas id="analyser" width="500" height="200"></canvas>
@@ -24,5 +24,8 @@
 	<script>
 		$('#complete_upload_popup').popup({
       transition: 'all 0.3s',
+      scrolllock: true,
+      blur: false,
+      escape: false,
     });
 	</script>

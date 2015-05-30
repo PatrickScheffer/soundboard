@@ -10,6 +10,7 @@ if (arg(0)) {
 
 $main_regions = array(
 	'js' => load_javascript($page),
+	'css' => load_stylesheets($page),
 	'body' => load_template($page),
 );
 
